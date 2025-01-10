@@ -125,10 +125,39 @@ async def add_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Please specify a topic after the /addtopic command.")
 
+from collections import Counter
+
+async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    topics_generated = topics_collection.aggregate([
+      {
+        "$match": {
+          $expr: {
+            $gte: [
+              "$generation_time",
+              {
+                "$subtract": [
+                  "$$NOW",
+                  86400000
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ])
+    user_counts = Counter([topics_generated["user_id"] for data in scenario_data])
+    message = "Leaderboard:\n"
+    for rank, (user_id, count) in enumerate(leaderboard, 1):
+        message += f"Rank {rank}: User ID: {user_id}, Count: {count}\n"
+    await update.message.reply_text(message)
+
+
+
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('addtopic', add_topic))
+    application.add_handler(CommandHandler('leaderboard', show_leaderboard))
     
     application.run_polling()
 
