@@ -128,23 +128,57 @@ async def add_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
 from collections import Counter
 
 async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    topics_generated = topics_collection.aggregate([
-      {
+    #Fetch topics generated in last day
+    topics_generated_last_day = topics_collection.aggregate([
+    {
         "$match": {
-          $expr: {
-            $gte: [
-              "$generation_time",
-              {
-                "$subtract": [
-                  "$$NOW",
-                  86400000]}]}}}
-    ])
-    user_counts = Counter([data["user_id"] for data in scenario_data])
-    leaderboard = user_counts.most_common(top_n=5)
-    message = "Leaderboard:\n"
-    for rank, (user_id, count) in enumerate(leaderboard, 1):
-        message += f"Rank {rank}: User ID: {user_id}, Count: {count}\n"
-    await update.message.reply_text(message)
+            "$expr": {
+                "$gte": [
+                    "$creation_time", 
+                    {
+                        "$subtract": ["$$NOW", 86400000] 
+                    }
+                ]
+            }
+        }
+    }
+])
+    #Fetch topics generated in last month
+    topics_generated_last_month = topics_collection.aggregate([
+    {
+        "$match": {
+            "$expr": {
+                "$gte": [
+                    "$creation_time", 
+                    {
+                        "$subtract": ["$$NOW", 30*86400000] 
+                    }
+                ]
+            }
+        }
+    }
+])
+    #Get counter object
+    user_counts_daily = Counter([data["username"] for data in topics_generated_last_day])
+    user_counts_monthly = Counter([data["username"] for data in topics_generated_last_month])
+
+    #Get daily and monthly leaderboard
+    leaderboard_daily = user_counts_daily.most_common(5)
+    leaderboard_monthly= user_counts_monthly.most_common(5)
+
+    #Create the message with emojis
+    message = "\U0001F3C6 Leaderboard:\n\n"
+    message += f"\U0001F4C5 *Month*\n"
+
+    for rank, (user_id, count) in enumerate(leaderboard_monthly, 1):
+        message += f"{rank}. @{user_id} - {count}\n"
+
+    message += f"\n\U0001F4C5 *Day*\n"
+    for rank, (user_id, count) in enumerate(leaderboard_daily, 1):
+        message += f"{rank}. @{user_id} - {count}\n"
+
+    #Send the leaderboard
+    await update.message.reply_text(message,parse_mode ="markdown")
 
 
 
