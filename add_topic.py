@@ -145,7 +145,8 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
       }
     ])
-    user_counts = Counter([topics_generated["user_id"] for data in scenario_data])
+    user_counts = Counter([data["user_id"] for data in scenario_data])
+    leaderboard = user_counts.most_common(top_n=5)
     message = "Leaderboard:\n"
     for rank, (user_id, count) in enumerate(leaderboard, 1):
         message += f"Rank {rank}: User ID: {user_id}, Count: {count}\n"
