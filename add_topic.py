@@ -137,13 +137,7 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
               {
                 "$subtract": [
                   "$$NOW",
-                  86400000
-                ]
-              }
-            ]
-          }
-        }
-      }
+                  86400000]}]}}}
     ])
     user_counts = Counter([data["user_id"] for data in scenario_data])
     leaderboard = user_counts.most_common(top_n=5)
