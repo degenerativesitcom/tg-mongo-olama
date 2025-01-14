@@ -30,7 +30,11 @@ except Exception as e:
 
 def get_unprocessed_topics():
     """Fetches all unprocessed topics from MongoDB."""
-    return topics_collection.find({"processed": False})
+    count_unprocessed = topics_collection.count_documents({"processed": False})
+    if (count_unprocessed==0):
+        return topics_collection.aggregate([{"$sample": {"size": 1}}])
+    else:
+        return topics_collection.find({"processed": False})
 
 def main():
     while True:  
