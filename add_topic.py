@@ -125,10 +125,68 @@ async def add_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Please specify a topic after the /addtopic command.")
 
+from collections import Counter
+
+async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    #Fetch topics generated in last day
+    topics_generated_last_day = topics_collection.aggregate([
+    {
+        "$match": {
+            "$expr": {
+                "$gte": [
+                    "$creation_time", 
+                    {
+                        "$subtract": ["$$NOW", 86400000] 
+                    }
+                ]
+            }
+        }
+    }
+])
+    #Fetch topics generated in last month
+    topics_generated_last_month = topics_collection.aggregate([
+    {
+        "$match": {
+            "$expr": {
+                "$gte": [
+                    "$creation_time", 
+                    {
+                        "$subtract": ["$$NOW", 30*86400000] 
+                    }
+                ]
+            }
+        }
+    }
+])
+    #Get counter object
+    user_counts_daily = Counter([data["username"] for data in topics_generated_last_day])
+    user_counts_monthly = Counter([data["username"] for data in topics_generated_last_month])
+
+    #Get daily and monthly leaderboard
+    leaderboard_daily = user_counts_daily.most_common(5)
+    leaderboard_monthly= user_counts_monthly.most_common(5)
+
+    #Create the message with emojis
+    message = "\U0001F3C6 Leaderboard:\n\n"
+    message += f"\U0001F4C5 *Month*\n"
+
+    for rank, (user_id, count) in enumerate(leaderboard_monthly, 1):
+        message += f"{rank}. @{user_id} - {count}\n"
+
+    message += f"\n\U0001F4C5 *Day*\n"
+    for rank, (user_id, count) in enumerate(leaderboard_daily, 1):
+        message += f"{rank}. @{user_id} - {count}\n"
+
+    #Send the leaderboard
+    await update.message.reply_text(message,parse_mode ="markdown")
+
+
+
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('addtopic', add_topic))
+    application.add_handler(CommandHandler('leaderboard', show_leaderboard))
     
     application.run_polling()
 
