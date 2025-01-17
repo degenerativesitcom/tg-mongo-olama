@@ -159,8 +159,10 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 ])
     #Get counter object
-    user_counts_daily = Counter([data["username"] for data in topics_generated_last_day])
-    user_counts_monthly = Counter([data["username"] for data in topics_generated_last_month])
+    user_counts_daily = Counter([data["username"] for data in topics_generated_last_day 
+                             if data and "username" in data and data["username"] is not None])
+    user_counts_monthly = Counter([data["username"] for data in topics_generated_last_month 
+                             if data and "username" in data and data["username"] is not None])
 
     #Get daily and monthly leaderboard
     leaderboard_daily = user_counts_daily.most_common(5)
