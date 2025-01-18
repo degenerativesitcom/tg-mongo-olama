@@ -9,7 +9,7 @@ from database import save_scenario
 from dotenv import load_dotenv
 import os
 import asyncio
-
+import re
 
 load_dotenv()
 
@@ -180,9 +180,12 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message += f"{rank}. @{user_id} - {count}\n"
 
     #Send the leaderboard
-    await update.message.reply_text(message,parse_mode ="markdown")
+    await update.message.reply_text(format_telegram(message),parse_mode ="markdown")
 
 
+def format_telegram(input_str):
+  #Escapes special characters in a string for use in Telegram messages.
+  return re.sub(r"([_])", r"\\\1", input_str) 
 
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
